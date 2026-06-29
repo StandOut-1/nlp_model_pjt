@@ -176,64 +176,151 @@ def tokenize(text):
 # 5. IMDB 데이터 다운로드 및 로드 함수
 # ---------------------------------------------------------------------
 
-def download_and_extract_imdb(config: Config) -> Path:
-    """IMDB 데이터셋이 없으면 다운로드하고 압축을 해제합니다."""
+# def download_and_extract_imdb(config: Config) -> Path:
+#     """IMDB 데이터셋이 없으면 다운로드하고 압축을 해제합니다."""
+#
+#     # data_dir 문자열을 Path 객체로 변환합니다.
+#     data_dir = Path(config.data_dir)
+#
+#     # data 폴더가 없으면 새로 만듭니다.
+#     data_dir.mkdir(parents=True, exist_ok=True)
+#
+#     # 압축 해제 후 존재해야 하는 aclImdb 폴더 경로를 만듭니다.
+#     dataset_path = data_dir / config.dataset_folder
+#
+#     # 이미 데이터셋 폴더가 있으면 다운로드하지 않고 바로 반환합니다.
+#     if dataset_path.exists():
+#         print(f"[데이터 확인] 기존 IMDB 데이터셋 사용: {dataset_path}")
+#         return dataset_path
+#
+#     # 다운로드할 압축 파일 경로를 만듭니다.
+#     archive_path = data_dir / config.archive_name
+#
+#     # 압축 파일이 아직 없으면 인터넷에서 다운로드합니다.
+#     if not archive_path.exists():
+#         print("[데이터 다운로드] IMDB 데이터셋 다운로드를 시작합니다.")
+#         print(f"[URL] {config.data_url}")
+#
+#         # urllib.request.urlretrieve()는 URL의 파일을 지정한 경로에 저장합니다.
+#         urllib.request.urlretrieve(config.data_url, archive_path)
+#
+#         print(f"[데이터 다운로드 완료] {archive_path}")
+#
+#     # tar.gz 압축 파일을 해제합니다.
+#     print("[압축 해제] IMDB 데이터셋 압축을 해제합니다.")
+#     with tarfile.open(archive_path, "r:gz") as tar:
+#         tar.extractall(path=data_dir)
+#
+#     # 압축 해제 후 데이터셋 폴더 경로를 반환합니다.
+#     print(f"[압축 해제 완료] {dataset_path}")
+#     return dataset_path
+#
 
-    # data_dir 문자열을 Path 객체로 변환합니다.
-    data_dir = Path(config.data_dir)
-
-    # data 폴더가 없으면 새로 만듭니다.
-    data_dir.mkdir(parents=True, exist_ok=True)
-
-    # 압축 해제 후 존재해야 하는 aclImdb 폴더 경로를 만듭니다.
-    dataset_path = data_dir / config.dataset_folder
-
-    # 이미 데이터셋 폴더가 있으면 다운로드하지 않고 바로 반환합니다.
-    if dataset_path.exists():
-        print(f"[데이터 확인] 기존 IMDB 데이터셋 사용: {dataset_path}")
-        return dataset_path
-
-    # 다운로드할 압축 파일 경로를 만듭니다.
-    archive_path = data_dir / config.archive_name
-
-    # 압축 파일이 아직 없으면 인터넷에서 다운로드합니다.
-    if not archive_path.exists():
-        print("[데이터 다운로드] IMDB 데이터셋 다운로드를 시작합니다.")
-        print(f"[URL] {config.data_url}")
-
-        # urllib.request.urlretrieve()는 URL의 파일을 지정한 경로에 저장합니다.
-        urllib.request.urlretrieve(config.data_url, archive_path)
-
-        print(f"[데이터 다운로드 완료] {archive_path}")
-
-    # tar.gz 압축 파일을 해제합니다.
-    print("[압축 해제] IMDB 데이터셋 압축을 해제합니다.")
-    with tarfile.open(archive_path, "r:gz") as tar:
-        tar.extractall(path=data_dir)
-
-    # 압축 해제 후 데이터셋 폴더 경로를 반환합니다.
-    print(f"[압축 해제 완료] {dataset_path}")
-    return dataset_path
+# def read_imdb_split(dataset_path: Path, split: str) -> List[Tuple[str, int]]:
+#     """IMDB train 또는 test 폴더에서 리뷰 텍스트와 라벨을 읽어옵니다."""
+#
+#     # 결과를 저장할 리스트입니다.
+#     samples: List[Tuple[str, int]] = []
+#
+#     # neg는 부정 리뷰이므로 0, pos는 긍정 리뷰이므로 1로 지정합니다.
+#     label_map = {"neg": 0, "pos": 1}
+#
+#     # neg 폴더와 pos 폴더를 차례대로 읽습니다.
+#     for label_name, label_id in label_map.items():
+#
+#         # 예: data/aclImdb/train/neg 또는 data/aclImdb/train/pos
+#         review_dir = dataset_path / split / label_name
+#
+#         # 폴더가 없으면 사용자에게 명확한 오류 메시지를 보여 줍니다.
+#         if not review_dir.exists():
+#             raise FileNotFoundError(f"리뷰 폴더를 찾을 수 없습니다: {review_dir}")
+#
+#         # 해당 폴더 안의 모든 txt 파일을 정렬된 순서로 읽습니다.
+#         for file_path in sorted(review_dir.glob("*.txt")):
+#
+#             # IMDB 리뷰 파일은 일반적으로 UTF-8로 읽을 수 있습니다.
+#             text = file_path.read_text(encoding="utf-8", errors="ignore")
+#
+#             # 텍스트와 라벨을 하나의 샘플로 저장합니다.
+#             samples.append((text, label_id))
+#
+#     # 라벨 순서가 한쪽으로 몰리지 않도록 샘플 순서를 섞습니다.
+#     random.shuffle(samples)
+#
+#     # 전체 샘플 리스트를 반환합니다.
+#     return samples
 
 
-def read_imdb_split(dataset_path: Path, split: str) -> List[Tuple[str, int]]:
-    """IMDB train 또는 test 폴더에서 리뷰 텍스트와 라벨을 읽어옵니다."""
+# def make_toy_samples() -> Tuple[List[Tuple[str, int]], List[Tuple[str, int]]]:
+#     """인터넷 다운로드가 불가능할 때 실행 확인용 작은 예제 데이터를 만듭니다."""
+#
+#     # 긍정 문장 예시입니다.
+#     positive = [
+#         "This movie was wonderful and I loved every moment",
+#         "The story was beautiful and the acting was excellent",
+#         "A fantastic film with great characters",
+#         "I really enjoyed this movie it was amazing",
+#         "The plot was touching and the music was great",
+#         "Brilliant movie with a very satisfying ending",
+#         "The performances were strong and emotional",
+#         "This is one of the best films I have watched",
+#     ]
+#
+#     # 부정 문장 예시입니다.
+#     negative = [
+#         "This movie was terrible and boring",
+#         "The story was weak and the acting was bad",
+#         "A disappointing film with poor characters",
+#         "I did not enjoy this movie it was awful",
+#         "The plot was confusing and the music was annoying",
+#         "Bad movie with a very unsatisfying ending",
+#         "The performances were weak and emotionless",
+#         "This is one of the worst films I have watched",
+#     ]
+#
+#     # 긍정은 1, 부정은 0으로 라벨링합니다.
+#     samples = [(text, 1) for text in positive] + [(text, 0) for text in negative]
+#
+#     # 작은 데이터에서도 학습/검증/테스트 흐름이 돌도록 여러 번 복제합니다.
+#     samples = samples * 20
+#
+#     # 샘플 순서를 섞습니다.
+#     random.shuffle(samples)
+#
+#     # 앞쪽 80%를 훈련용, 뒤쪽 20%를 테스트용으로 나눕니다.
+#     split_idx = int(len(samples) * 0.8)
+#     return samples[:split_idx], samples[split_idx:]
 
-    # 결과를 저장할 리스트입니다.
-    samples: List[Tuple[str, int]] = []
 
-    # neg는 부정 리뷰이므로 0, pos는 긍정 리뷰이므로 1로 지정합니다.
-    label_map = {"neg": 0, "pos": 1}
-
-    # neg 폴더와 pos 폴더를 차례대로 읽습니다.
-    for label_name, label_id in label_map.items():
-
-        # 예: data/aclImdb/train/neg 또는 data/aclImdb/train/pos
-        review_dir = dataset_path / split / label_name
-
-        # 폴더가 없으면 사용자에게 명확한 오류 메시지를 보여 줍니다.
-        if not review_dir.exists():
-            raise FileNotFoundError(f"리뷰 폴더를 찾을 수 없습니다: {review_dir}")
+# def load_data(config: Config) -> Tuple[List[Tuple[str, int]], List[Tuple[str, int]]]:
+#     """IMDB 데이터를 로드하고, 실패하면 선택적으로 예제 데이터를 반환합니다."""
+#
+#     try:
+#         # IMDB 데이터셋을 다운로드하고 압축을 해제합니다.
+#         # dataset_path = download_and_extract_imdb(config)
+#
+#         # 훈련 데이터와 테스트 데이터를 각각 읽습니다.
+#         # train_samples = read_imdb_split(dataset_path, "train")
+#         # test_samples = read_imdb_split(dataset_path, "test")
+#
+#         # 데이터 개수를 출력하여 정상 로드 여부를 확인합니다.
+#         print(f"[데이터 로드 완료] train={len(train_samples)}, test={len(test_samples)}")
+#
+#         # 훈련/테스트 데이터를 반환합니다.
+#         return train_samples, test_samples
+#
+#     except Exception as error:
+#         # 다운로드 실패, 압축 해제 실패, 파일 경로 오류 등을 여기서 처리합니다.
+#         print(f"[경고] IMDB 원본 데이터 로드 실패: {error}")
+#
+#         # 옵션이 꺼져 있으면 오류를 다시 발생시켜 실행을 중단합니다.
+#         if not config.use_toy_data_if_download_fails:
+#             raise
+#
+#         # 인터넷이 막힌 환경에서도 코드 실행 구조를 확인할 수 있도록 예제 데이터를 사용합니다.
+#         print("[대체 실행] 인터넷 다운로드가 불가능하여 작은 예제 데이터로 실행합니다.")
+#         # return make_toy_samples()
+def load_data(config: Config):
 
         # 해당 폴더 안의 모든 txt 파일을 정렬된 순서로 읽습니다.
         for file_path in sorted(review_dir.glob("*.txt")):
