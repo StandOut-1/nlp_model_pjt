@@ -68,18 +68,6 @@ class Config:
 
     # IMDB 원본 데이터셋 다운로드 주소입니다.
     # 데이터셋은 aclImdb_v1.tar.gz 파일로 제공됩니다.
-    data_url: str = "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
-
-    # 데이터 파일을 저장할 기본 폴더입니다.
-    # 프로젝트 루트 아래 data 폴더를 사용합니다.
-    data_dir: str = "../data"
-
-    # 압축 파일명입니다.
-    archive_name: str = "aclImdb_v1.tar.gz"
-
-    # 압축 해제 후 생성되는 폴더명입니다.
-    dataset_folder: str = "aclImdb"
-=======
     # data_url: str = "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
 
     # 데이터 파일을 저장할 기본 폴더입니다.
@@ -92,7 +80,6 @@ class Config:
     # 압축 해제 후 생성되는 폴더명입니다.
     # dataset_folder: str = "aclImdb"
     data_file: str = "ratings.txt"
->>>>>>> Stashed changes
 
     # 한 문장에서 사용할 최대 단어 개수입니다.
     # 긴 리뷰는 앞에서부터 max_len개 단어만 사용하고, 짧은 리뷰는 패딩합니다.
@@ -127,9 +114,13 @@ class Config:
     # 전체 데이터를 몇 번 반복 학습할지 지정합니다.
     max_epochs: int = 3
 
+    train_ratio: float = 0.8
+
     # 검증 데이터 비율입니다.
     # IMDB 원본 train 25,000개 중 일부를 validation으로 분리합니다.
-    val_ratio: float = 0.2
+    # val_ratio: float = 0.2
+    val_ratio = 0.1
+    test_ratio = 0.1
 
     # CPU에서 실행할 때 DataLoader가 사용할 병렬 작업자 수입니다.
     # Windows/PyCharm에서는 0이 가장 안전합니다.
@@ -140,7 +131,8 @@ class Config:
 
     # 실제 IMDB 데이터 다운로드에 실패했을 때 예제 데이터로라도 실행할지 지정합니다.
     # 수업 환경에서 인터넷이 막혀 있어도 코드 구조를 확인할 수 있게 하기 위한 옵션입니다.
-    use_toy_data_if_download_fails: bool = True
+    # use_toy_data_if_download_fails: bool = True
+
 
 
 # ---------------------------------------------------------------------
