@@ -79,6 +79,20 @@ class Config:
 
     # 압축 해제 후 생성되는 폴더명입니다.
     dataset_folder: str = "aclImdb"
+=======
+    # data_url: str = "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
+
+    # 데이터 파일을 저장할 기본 폴더입니다.
+    # 프로젝트 루트 아래 data 폴더를 사용합니다.
+    data_dir: str = "data"
+
+    # 압축 파일명입니다.
+    # archive_name: str = "aclImdb_v1.tar.gz"
+
+    # 압축 해제 후 생성되는 폴더명입니다.
+    # dataset_folder: str = "aclImdb"
+    data_file: str = "ratings.txt"
+>>>>>>> Stashed changes
 
     # 한 문장에서 사용할 최대 단어 개수입니다.
     # 긴 리뷰는 앞에서부터 max_len개 단어만 사용하고, 짧은 리뷰는 패딩합니다.
