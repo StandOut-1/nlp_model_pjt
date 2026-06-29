@@ -322,91 +322,50 @@ def tokenize(text):
 #         # return make_toy_samples()
 def load_data(config: Config):
 
-        # 해당 폴더 안의 모든 txt 파일을 정렬된 순서로 읽습니다.
-        for file_path in sorted(review_dir.glob("*.txt")):
+    data_path = Path(config.data_dir) / config.data_file
+    print("현재 작업 폴더:", Path.cwd())
+    print("찾는 파일:", data_path)
+    print("절대 경로:", data_path.resolve())
+    print("파일 존재 여부:", data_path.exists())
 
-            # IMDB 리뷰 파일은 일반적으로 UTF-8로 읽을 수 있습니다.
-            text = file_path.read_text(encoding="utf-8", errors="ignore")
+    if not data_path.exists():
+        raise FileNotFoundError(f"{data_path} 파일이 없습니다.")
 
-            # 텍스트와 라벨을 하나의 샘플로 저장합니다.
-            samples.append((text, label_id))
+    samples = []
 
-    # 라벨 순서가 한쪽으로 몰리지 않도록 샘플 순서를 섞습니다.
+    with open(data_path, encoding="utf-8") as f:
+
+        next(f)  # 헤더 제거
+
+        for line in f:
+
+            cols = line.rstrip().split("\t")
+
+            # id document label
+            if len(cols) != 3:
+                continue
+
+            _, document, label = cols
+
+            if document.strip() == "":
+                continue
+
+            samples.append((document, int(label)))
+
     random.shuffle(samples)
 
-    # 전체 샘플 리스트를 반환합니다.
-    return samples
+    train_end = int(len(samples) * config.train_ratio)
+    val_end = int(len(samples) * (config.train_ratio + config.val_ratio))
 
+    train_samples = samples[:train_end]
+    val_samples = samples[train_end:val_end]
+    test_samples = samples[val_end:]
 
-def make_toy_samples() -> Tuple[List[Tuple[str, int]], List[Tuple[str, int]]]:
-    """인터넷 다운로드가 불가능할 때 실행 확인용 작은 예제 데이터를 만듭니다."""
+    print(f"train : {len(train_samples)}")
+    print(f"val   : {len(val_samples)}")
+    print(f"test  : {len(test_samples)}")
 
-    # 긍정 문장 예시입니다.
-    positive = [
-        "This movie was wonderful and I loved every moment",
-        "The story was beautiful and the acting was excellent",
-        "A fantastic film with great characters",
-        "I really enjoyed this movie it was amazing",
-        "The plot was touching and the music was great",
-        "Brilliant movie with a very satisfying ending",
-        "The performances were strong and emotional",
-        "This is one of the best films I have watched",
-    ]
-
-    # 부정 문장 예시입니다.
-    negative = [
-        "This movie was terrible and boring",
-        "The story was weak and the acting was bad",
-        "A disappointing film with poor characters",
-        "I did not enjoy this movie it was awful",
-        "The plot was confusing and the music was annoying",
-        "Bad movie with a very unsatisfying ending",
-        "The performances were weak and emotionless",
-        "This is one of the worst films I have watched",
-    ]
-
-    # 긍정은 1, 부정은 0으로 라벨링합니다.
-    samples = [(text, 1) for text in positive] + [(text, 0) for text in negative]
-
-    # 작은 데이터에서도 학습/검증/테스트 흐름이 돌도록 여러 번 복제합니다.
-    samples = samples * 20
-
-    # 샘플 순서를 섞습니다.
-    random.shuffle(samples)
-
-    # 앞쪽 80%를 훈련용, 뒤쪽 20%를 테스트용으로 나눕니다.
-    split_idx = int(len(samples) * 0.8)
-    return samples[:split_idx], samples[split_idx:]
-
-
-def load_data(config: Config) -> Tuple[List[Tuple[str, int]], List[Tuple[str, int]]]:
-    """IMDB 데이터를 로드하고, 실패하면 선택적으로 예제 데이터를 반환합니다."""
-
-    try:
-        # IMDB 데이터셋을 다운로드하고 압축을 해제합니다.
-        dataset_path = download_and_extract_imdb(config)
-
-        # 훈련 데이터와 테스트 데이터를 각각 읽습니다.
-        train_samples = read_imdb_split(dataset_path, "train")
-        test_samples = read_imdb_split(dataset_path, "test")
-
-        # 데이터 개수를 출력하여 정상 로드 여부를 확인합니다.
-        print(f"[데이터 로드 완료] train={len(train_samples)}, test={len(test_samples)}")
-
-        # 훈련/테스트 데이터를 반환합니다.
-        return train_samples, test_samples
-
-    except Exception as error:
-        # 다운로드 실패, 압축 해제 실패, 파일 경로 오류 등을 여기서 처리합니다.
-        print(f"[경고] IMDB 원본 데이터 로드 실패: {error}")
-
-        # 옵션이 꺼져 있으면 오류를 다시 발생시켜 실행을 중단합니다.
-        if not config.use_toy_data_if_download_fails:
-            raise
-
-        # 인터넷이 막힌 환경에서도 코드 실행 구조를 확인할 수 있도록 예제 데이터를 사용합니다.
-        print("[대체 실행] 인터넷 다운로드가 불가능하여 작은 예제 데이터로 실행합니다.")
-        return make_toy_samples()
+    return train_samples, val_samples, test_samples
 
 
 # ---------------------------------------------------------------------
@@ -535,32 +494,53 @@ class IMDBDataModule(pl.LightningDataModule):
 
     def setup(self, stage: str = None) -> None:
         # 훈련 데이터와 테스트 데이터를 로드합니다.
-        train_samples, test_samples = load_data(self.config)
+
+        # train_samples, test_samples = load_data(self.config)
+        train_samples, val_samples, test_samples = load_data(self.config)
+
 
         # 훈련 데이터만 사용하여 vocabulary를 만듭니다.
         self.word_to_index = build_vocab(train_samples, self.config)
 
         # 훈련 데이터를 Dataset 객체로 변환합니다.
-        full_train_dataset = IMDBDataset(train_samples, self.word_to_index, self.config.max_len)
 
+        # full_train_dataset = IMDBDataset(train_samples, self.word_to_index, self.config.max_len)
+        self.train_dataset = IMDBDataset(
+            train_samples,
+            self.word_to_index,
+            self.config.max_len,
+        )
+
+        self.val_dataset = IMDBDataset(
+            val_samples,
+            self.word_to_index,
+            self.config.max_len,
+        )
+
+        self.test_dataset = IMDBDataset(
+            test_samples,
+            self.word_to_index,
+            self.config.max_len,
+        )
         # 테스트 데이터를 Dataset 객체로 변환합니다.
         self.test_dataset = IMDBDataset(test_samples, self.word_to_index, self.config.max_len)
 
         # 훈련 데이터 중 일부를 검증 데이터로 분리합니다.
-        val_size = int(len(full_train_dataset) * self.config.val_ratio)
+
+        # val_size = int(len(full_train_dataset) * self.config.val_ratio)
 
         # 나머지를 실제 훈련 데이터로 사용합니다.
-        train_size = len(full_train_dataset) - val_size
+        # train_size = len(full_train_dataset) - val_size
 
         # random_split()이 항상 같은 결과를 내도록 generator에 seed를 지정합니다.
-        generator = torch.Generator().manual_seed(self.config.seed)
+        # generator = torch.Generator().manual_seed(self.config.seed)
 
         # 훈련 Dataset을 train/validation으로 분할합니다.
-        self.train_dataset, self.val_dataset = random_split(
-            full_train_dataset,
-            [train_size, val_size],
-            generator=generator,
-        )
+        # self.train_dataset, self.val_dataset = random_split(
+        #     full_train_dataset,
+        #     [train_size, val_size],
+        #     generator=generator,
+        # )
 
         # 분할 결과를 출력합니다.
         print(f"[Dataset 준비 완료] train={len(self.train_dataset)}, val={len(self.val_dataset)}, test={len(self.test_dataset)}")
