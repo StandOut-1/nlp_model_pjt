@@ -158,11 +158,18 @@ def clean_text(text: str) -> str:
     return text
 
 
-def tokenize(text: str) -> List[str]:
-    """문장을 단어 리스트로 분리합니다."""
+# def tokenize(text: str) -> List[str]:
+#     """문장을 단어 리스트로 분리합니다."""
+#
+#     # clean_text()로 텍스트를 정리한 뒤 공백 기준으로 단어를 나눕니다.
+#     return clean_text(text).split()
+def tokenize(text):
 
-    # clean_text()로 텍스트를 정리한 뒤 공백 기준으로 단어를 나눕니다.
-    return clean_text(text).split()
+    text = re.sub(r"[^가-힣a-zA-Z0-9 ]", " ", text)
+
+    text = re.sub(r"\s+", " ", text)
+
+    return text.split()
 
 
 # ---------------------------------------------------------------------
