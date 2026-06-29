@@ -50,3 +50,5 @@ models/
 
 # Environment variable files
 .env
+
+lightning_logs/
